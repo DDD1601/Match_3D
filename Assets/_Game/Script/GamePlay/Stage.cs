@@ -1,4 +1,4 @@
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using static UnityEditor.Progress;
@@ -46,8 +46,20 @@ public class Stage : MonoBehaviour
 
     private void Collect()
     {
+        // Gọi hàm Collect trên cả 2 item
         items[0].Collect();
         items[1].Collect();
         items.Clear();
+
+        // Gọi OnItemCollected() từ LevelManager để cập nhật trạng thái
+        if (LevelManager.instance != null)
+        {
+            LevelManager.instance.OnItemCollected();
+            Debug.Log("Cặp bóng đã được ghép thành công! Gọi OnItemCollected().");
+        }
+        else
+        {
+            Debug.LogError("LevelManager instance không tồn tại!");
+        }
     }
 }
