@@ -121,6 +121,18 @@ public class LevelManager : MonoBehaviour
         }
     }
 
+    public void ResetTimer()
+    {
+        StopAllCoroutines(); // Dừng mọi coroutine đang chạy (bao gồm bộ đếm thời gian)
+        remainingTime = levelTime; // Đặt lại thời gian còn lại
+        if (timerText != null)
+        {
+            timerText.text = $"Thời gian: {Mathf.CeilToInt(remainingTime)}s"; // Cập nhật hiển thị
+        }
+        StartTimer(); // Bắt đầu đếm thời gian lại từ đầu
+        Debug.Log("Đã reset thời gian cho màn chơi mới.");
+    }
+
     public void RetryLevel()
     {
         Debug.Log("Người chơi chọn chơi lại level.");
@@ -136,7 +148,7 @@ public class LevelManager : MonoBehaviour
         SetTotalItems(currentLevelItemCount); // Đặt lại số lượng bóng ban đầu
 
         // Reset thời gian
-        StartTimer();
+        ResetTimer();
         // Ẩn UI và tiếp tục game
         if (levelCompleteUI != null)
         {
@@ -161,6 +173,8 @@ public class LevelManager : MonoBehaviour
         currentLevelItemCount = itemSpawner.GetCurrentItemCount(); // Cập nhật số lượng bóng mới
         SetTotalItems(currentLevelItemCount); // Đặt số lượng bóng mới
 
+        // Reset thời gian
+        ResetTimer();
         // Ẩn UI và tiếp tục game
         if (levelCompleteUI != null)
         {
