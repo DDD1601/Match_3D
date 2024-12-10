@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using System.Collections;
+using UnityEngine;
 
 public class LevelManager : MonoBehaviour
 {
@@ -11,6 +12,13 @@ public class LevelManager : MonoBehaviour
     [SerializeField] private GameObject levelCompleteUI; // Tham chiếu đến UI hoàn thành màn chơi
     [SerializeField] public int currentLevelItemCount; // Lưu số lượng bóng của màn hiện tại
 
+    //test
+    [SerializeField] private float levelTime = 60f; // Thời gian tối đa của màn chơi (giây)
+    private float remainingTime; // Thời gian còn lại
+    [SerializeField] private GameObject gameOverUI; // Tham chiếu đến UI khi thua
+    [SerializeField] private TMPro.TextMeshProUGUI timerText; // Text hiển thị thời gian
+    private bool isGameOver = false; // Kiểm tra xem game đã kết thúc chưa
+
     private void Awake()
     {
         if (instance == null)
@@ -18,18 +26,15 @@ public class LevelManager : MonoBehaviour
             instance = this;
             Debug.Log("LevelManager instance đã được tạo.");
         }
-        else
-        {
-            Destroy(gameObject);
-            Debug.LogWarning("Đã có một instance khác của LevelManager. GameObject này sẽ bị hủy.");
-        }
+        isGameOver = false;
+        StartTimer(); // Bắt đầu đếm thời gian
     }
 
     public void SetTotalItems(int count)
     {
         totalItems = count;
         collectedItems = 0;
-        Debug.LogError($"Tổng số bóng trong level: {totalItems}");
+        Debug.Log($"Tổng số bóng trong level: {totalItems}");
     }
 
     public void OnItemCollected()
@@ -63,6 +68,47 @@ public class LevelManager : MonoBehaviour
         }
     }
 
+    private void StartTimer()
+    {
+        remainingTime = levelTime;
+        StartCoroutine(TimerCoroutine());
+    }
+
+    private IEnumerator TimerCoroutine()
+    {
+        while (remainingTime > 0 && !isGameOver)
+        {
+            yield return new WaitForSeconds(1f); // Đợi 1 giây
+            remainingTime--;
+
+            // Cập nhật UI thời gian
+            if (timerText != null)
+            {
+                timerText.text = $"Thời gian: {Mathf.CeilToInt(remainingTime)}s";
+            }
+
+            // Kiểm tra nếu hết thời gian
+            if (remainingTime <= 0)
+            {
+                GameOver();
+            }
+        }
+    }
+
+    private void GameOver()
+    {
+        isGameOver = true;
+        Debug.Log("Game Over! Hết thời gian.");
+
+        // Hiển thị UI thua
+        if (gameOverUI != null)
+        {
+            gameOverUI.SetActive(true);
+        }
+
+        // Dừng game
+        Time.timeScale = 0;
+    }
     private void CleanupRemainingItems()
     {
         // Lấy tất cả các bóng còn lại trên sàn
@@ -79,6 +125,9 @@ public class LevelManager : MonoBehaviour
     {
         Debug.Log("Người chơi chọn chơi lại level.");
 
+        // Reset trạng thái game
+        isGameOver = false;
+        Time.timeScale = 1;
         // Dọn dẹp và chơi lại màn hiện tại
         CleanupRemainingItems();
         //itemSpawner.OnLevelComplete(); // Spawn lại các bóng
@@ -86,10 +135,16 @@ public class LevelManager : MonoBehaviour
         itemSpawner.SpawnItems(currentLevelItemCount); // Spawn lại các bóng với số lượng ban đầu
         SetTotalItems(currentLevelItemCount); // Đặt lại số lượng bóng ban đầu
 
+        // Reset thời gian
+        StartTimer();
         // Ẩn UI và tiếp tục game
         if (levelCompleteUI != null)
         {
             levelCompleteUI.SetActive(false);
+        }
+        if (gameOverUI != null)
+        {
+            gameOverUI.SetActive(false);
         }
         Time.timeScale = 1; // Tiếp tục game
         Debug.Log("Game tiếp tục (Time.timeScale = 1).");

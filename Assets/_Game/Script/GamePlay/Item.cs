@@ -11,7 +11,7 @@ public class Item : MonoBehaviour
 	[SerializeField] private Rigidbody rb;
 	[SerializeField] private float speed = 2;
 
-	public bool IsArrive(Vector3 target)
+    public bool IsArrive(Vector3 target)
 	{
 		//kiem tra xem item co gan diem target hay khong
 		return Vector3.Distance(rb.position, target) < 0.1f;
@@ -46,7 +46,28 @@ public class Item : MonoBehaviour
 
 	}
 
-	public void OnSelect()
+
+    public IEnumerator Disappear(float duration)
+    {
+        // Hiệu ứng scale nhỏ dần
+        Vector3 initialScale = transform.localScale;
+        Vector3 targetScale = Vector3.zero;
+
+        float time = 0;
+        while (time < duration)
+        {
+            time += Time.deltaTime;
+            float t = time / duration;
+
+            transform.localScale = Vector3.Lerp(initialScale, targetScale, t);
+            yield return null;
+        }
+
+        // Đảm bảo đã scale về 0
+        transform.localScale = targetScale;
+    }
+
+    public void OnSelect()
 	{
 		//bat dau select
 		rb.useGravity = false;
