@@ -3,7 +3,7 @@ using UnityEngine;
 
 public class LevelManager : MonoBehaviour
 {
-    public static LevelManager instance; // Singleton để truy cập dễ dàng từ các script khác
+    public static LevelManager instance; 
 
     private int totalItems; // Tổng số bóng trong level
     private int collectedItems; // Số bóng đã ghép cặp
@@ -11,7 +11,7 @@ public class LevelManager : MonoBehaviour
     [SerializeField] private ItemSpawner itemSpawner; // Tham chiếu đến ItemSpawner
     [SerializeField] private GameObject levelCompleteUI; // Tham chiếu đến UI hoàn thành màn chơi
     [SerializeField] public int currentLevelItemCount; // Lưu số lượng bóng của màn hiện tại
-
+    [SerializeField] public int currentLevel = 1; // Level hiện tại
     //test
     [SerializeField] private float levelTime = 60f; // Thời gian tối đa của màn chơi (giây)
     private float remainingTime; // Thời gian còn lại
@@ -62,8 +62,8 @@ public class LevelManager : MonoBehaviour
                 Debug.Log("Hiển thị UI hoàn thành màn chơi.");
             }
 
-            // Tạm dừng game (nếu muốn)
-            Time.timeScale = 0; // Nếu bạn không muốn dừng game, hãy bỏ dòng này
+            // Tạm dừng game 
+            Time.timeScale = 0;
             Debug.Log("Game đã tạm dừng (Time.timeScale = 0).");
         }
     }
@@ -123,7 +123,7 @@ public class LevelManager : MonoBehaviour
 
     public void ResetTimer()
     {
-        StopAllCoroutines(); // Dừng mọi coroutine đang chạy (bao gồm bộ đếm thời gian)
+        StopAllCoroutines(); // Dừng bộ đếm thời gian
         remainingTime = levelTime; // Đặt lại thời gian còn lại
         if (timerText != null)
         {
@@ -165,6 +165,7 @@ public class LevelManager : MonoBehaviour
     public void NextLevel()
     {
         Debug.Log("Người chơi chọn chuyển sang level tiếp theo.");
+        currentLevel++; // Tăng level
 
         // Chuyển sang màn tiếp theo
         CleanupRemainingItems();

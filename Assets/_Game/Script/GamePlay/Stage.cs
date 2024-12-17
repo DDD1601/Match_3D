@@ -1,7 +1,6 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using static UnityEditor.Progress;
 
 public class Stage : MonoBehaviour
 {
@@ -12,18 +11,17 @@ public class Stage : MonoBehaviour
     {
         if (items.Count == 0)
         {
-            //neu nhan 1 item thi di chuyen den vi tri dau tien
+            // Nếu nhận 1 item, di chuyển đến vị trí đầu tiên
             items.Add(item);
             item.OnMove(point1.position, Quaternion.identity, 0.2f);
             item.SetKinematic(true);
         }
-        else if (items.Count == 1) 
+        else if (items.Count == 1)
         {
-            //neu nhan item thu 2 thi di chuyen den vi tri thu 2
-
+            // Nếu nhận item thứ 2, di chuyển đến vị trí thứ 2
             if (item.Type == items[0].Type)
             {
-                //check neu la cung loai thi collect
+                // Nếu cùng loại, ghép cặp
                 items.Add(item);
                 item.OnMove(point2.position, Quaternion.identity, 0.2f);
                 item.SetKinematic(true);
@@ -32,7 +30,7 @@ public class Stage : MonoBehaviour
             }
             else
             {
-                //khac loai thi nem item di
+                // Nếu khác loại, ném item đi
                 item.Force(Vector3.up * 200 + Vector3.forward * 200);
             }
         }
@@ -42,57 +40,6 @@ public class Stage : MonoBehaviour
     {
         items.Remove(item);
         item.SetKinematic(false);
-    }
-
-    //private void Collect()
-    //{
-    //    // Gọi hàm Collect trên cả 2 item
-    //    items[0].Collect();
-    //    items[1].Collect();
-    //    items.Clear();
-
-    //    // Gọi OnItemCollected() từ LevelManager để cập nhật trạng thái
-    //    if (LevelManager.instance != null)
-    //    {
-    //        LevelManager.instance.OnItemCollected();
-    //        Debug.Log("Cặp bóng đã được ghép thành công! Gọi OnItemCollected().");
-    //    }
-    //    else
-    //    {
-    //        Debug.LogError("LevelManager instance không tồn tại!");
-    //    }
-    //}
-
-    private IEnumerator AnimateBothItems(Vector3 centerPoint, float duration)
-    {
-        Vector3 startPos1 = items[0].transform.position;
-        Vector3 startPos2 = items[1].transform.position;
-
-        Vector3 targetPos1 = centerPoint + new Vector3(-0.1f, -1, 0); // Điểm rơi bóng 1 (sang trái một chút)
-        Vector3 targetPos2 = centerPoint + new Vector3(0.1f, -1, 0);  // Điểm rơi bóng 2 (sang phải một chút)
-
-        float time = 0;
-
-        while (time < duration)
-        {
-            time += Time.deltaTime;
-            float t = time / duration;
-
-            // Di chuyển bóng 1
-            items[0].transform.position = Vector3.Lerp(startPos1, targetPos1, t);
-
-            // Di chuyển bóng 2
-            items[1].transform.position = Vector3.Lerp(startPos2, targetPos2, t);
-
-            yield return null;
-        }
-
-        // Đảm bảo vị trí cuối cùng của cả hai bóng
-        items[0].transform.position = targetPos1;
-        items[1].transform.position = targetPos2;
-
-        // Chờ một chút trước khi biến mất
-        yield return new WaitForSeconds(0.2f);
     }
 
     private void Collect()
@@ -106,11 +53,15 @@ public class Stage : MonoBehaviour
         // Tạo vị trí trung tâm giữa hai quả bóng
         Vector3 centerPoint = (items[0].transform.position + items[1].transform.position) / 2;
 
-        // Bước 1: Rơi xuống và di chuyển đến vị trí trung tâm
+        // Bước 1: Hai quả bóng rơi tự do xuống 2 điểm trên `Stage`
         float dropDuration = 0.5f; // Thời gian rơi xuống
-        yield return StartCoroutine(AnimateBothItems(centerPoint, dropDuration));
+        yield return StartCoroutine(AnimateBothItemsToStage(dropDuration));
 
-        // Bước 2: Biến mất
+        // Bước 2: Hai quả bóng hợp lại với nhau
+        float mergeDuration = 0.5f; // Thời gian hợp lại
+        yield return StartCoroutine(AnimateMerge(centerPoint, mergeDuration));
+
+        // Bước 3: Hai quả bóng nhỏ dần rồi biến mất
         float disappearDuration = 0.3f; // Thời gian biến mất
         yield return StartCoroutine(items[0].Disappear(disappearDuration));
         yield return StartCoroutine(items[1].Disappear(disappearDuration));
@@ -133,5 +84,74 @@ public class Stage : MonoBehaviour
         {
             Debug.LogError("LevelManager instance không tồn tại!");
         }
+    }
+
+    private IEnumerator AnimateBothItemsToStage(float duration)
+    {
+        // Điểm rơi bóng 1 và bóng 2 trên `Stage`
+        Vector3 targetPos1 = point1.position;
+        Vector3 targetPos2 = point2.position;
+
+        Vector3 startPos1 = items[0].transform.position;
+        Vector3 startPos2 = items[1].transform.position;
+
+        // Lấy rotation mục tiêu (cố định hoặc giống bóng đầu tiên)
+        Quaternion targetRotation = Quaternion.Euler(0, 0, 0); // Đặt rotation về cùng 0,0,0 
+        items[1].transform.rotation = items[0].transform.rotation; // Đồng bộ rotation của bóng 2 với bóng 1
+
+        float time = 0;
+
+        while (time < duration)
+        {
+            time += Time.deltaTime;
+            float t = time / duration;
+
+            // Di chuyển bóng 1 xuống điểm trên `Stage`
+            items[0].transform.position = Vector3.Lerp(startPos1, targetPos1, t);
+            items[0].transform.rotation = Quaternion.Lerp(items[0].transform.rotation, targetRotation, t);
+
+            // Di chuyển bóng 2 xuống điểm trên `Stage`
+            items[1].transform.position = Vector3.Lerp(startPos2, targetPos2, t);
+            items[1].transform.rotation = Quaternion.Lerp(items[1].transform.rotation, targetRotation, t);
+
+            yield return null;
+        }
+
+        // Đảm bảo vị trí cuối cùng của các bóng
+        items[0].transform.position = targetPos1;
+        items[0].transform.rotation = targetRotation;
+
+        items[1].transform.position = targetPos2;
+        items[1].transform.rotation = targetRotation;
+
+        yield return null;
+    }
+
+    private IEnumerator AnimateMerge(Vector3 centerPoint, float duration)
+    {
+        Vector3 startPos1 = items[0].transform.position;
+        Vector3 startPos2 = items[1].transform.position;
+
+        float time = 0;
+
+        while (time < duration)
+        {
+            time += Time.deltaTime;
+            float t = time / duration;
+
+            // Di chuyển bóng 1 đến vị trí trung tâm
+            items[0].transform.position = Vector3.Lerp(startPos1, centerPoint, t);
+
+            // Di chuyển bóng 2 đến vị trí trung tâm
+            items[1].transform.position = Vector3.Lerp(startPos2, centerPoint, t);
+
+            yield return null;
+        }
+
+        // Đảm bảo vị trí cuối cùng của các bóng là trung tâm
+        items[0].transform.position = centerPoint;
+        items[1].transform.position = centerPoint;
+
+        yield return null;
     }
 }
