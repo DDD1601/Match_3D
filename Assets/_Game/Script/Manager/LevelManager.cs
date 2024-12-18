@@ -3,7 +3,7 @@ using UnityEngine;
 
 public class LevelManager : MonoBehaviour
 {
-    public static LevelManager instance; 
+    public static LevelManager instance;
 
     private int totalItems; // Tổng số bóng trong level
     private int collectedItems; // Số bóng đã ghép cặp
@@ -12,7 +12,6 @@ public class LevelManager : MonoBehaviour
     [SerializeField] private GameObject levelCompleteUI; // Tham chiếu đến UI hoàn thành màn chơi
     [SerializeField] public int currentLevelItemCount; // Lưu số lượng bóng của màn hiện tại
     [SerializeField] public int currentLevel = 1; // Level hiện tại
-    //test
     [SerializeField] private float levelTime = 60f; // Thời gian tối đa của màn chơi (giây)
     private float remainingTime; // Thời gian còn lại
     [SerializeField] private GameObject gameOverUI; // Tham chiếu đến UI khi thua
@@ -50,10 +49,6 @@ public class LevelManager : MonoBehaviour
             CleanupRemainingItems(); // Dọn sạch các bóng còn lại
 
             Debug.Log("Đã dọn sạch các bóng còn lại. Gọi ItemSpawner.OnLevelComplete().");
-            /*itemSpawner.OnLevelComplete();*/ // Gọi để chuyển sang level mới
-
-            //Debug.Log("Đặt lại tổng số bóng sau khi hoàn thành level.");
-            //SetTotalItems(itemSpawner.GetCurrentItemCount()); // Cập nhật số lượng bóng mới cho level tiếp theo
 
             // Hiển thị UI hoàn thành màn chơi
             if (levelCompleteUI != null)
@@ -109,6 +104,7 @@ public class LevelManager : MonoBehaviour
         // Dừng game
         Time.timeScale = 0;
     }
+
     private void CleanupRemainingItems()
     {
         // Lấy tất cả các bóng còn lại trên sàn
@@ -142,8 +138,6 @@ public class LevelManager : MonoBehaviour
         Time.timeScale = 1;
         // Dọn dẹp và chơi lại màn hiện tại
         CleanupRemainingItems();
-        //itemSpawner.OnLevelComplete(); // Spawn lại các bóng
-        //LevelManager.instance.SetTotalItems(itemSpawner.GetCurrentItemCount()); // Đặt lại số lượng bóng
         itemSpawner.SpawnItems(currentLevelItemCount); // Spawn lại các bóng với số lượng ban đầu
         SetTotalItems(currentLevelItemCount); // Đặt lại số lượng bóng ban đầu
 
@@ -170,12 +164,16 @@ public class LevelManager : MonoBehaviour
         // Chuyển sang màn tiếp theo
         CleanupRemainingItems();
         itemSpawner.OnLevelComplete(); // Tăng số lượng bóng
-        //LevelManager.instance.SetTotalItems(itemSpawner.GetCurrentItemCount()); // Đặt số lượng bóng mới
         currentLevelItemCount = itemSpawner.GetCurrentItemCount(); // Cập nhật số lượng bóng mới
         SetTotalItems(currentLevelItemCount); // Đặt số lượng bóng mới
 
         // Reset thời gian
         ResetTimer();
+        // Cập nhật level text thông qua GameUIManager
+        if (GameUIManager.instance != null)
+        {
+            GameUIManager.instance.UpdateLevelText();
+        }
         // Ẩn UI và tiếp tục game
         if (levelCompleteUI != null)
         {
